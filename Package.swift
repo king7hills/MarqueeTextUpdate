@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "MarqueeText",
+    name: "MarqueeTextUpdate",
     platforms: [
         .iOS(.v13), .macOS(.v10_15), .watchOS(.v7), .tvOS(.v13)
 
