@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "MarqueeTextUpdate",
     platforms: [
-        .iOS(.v13), .macOS(.v10_15), .watchOS(.v7), .tvOS(.v13)
+        .iOS(.v14), .macOS(.v10_15), .watchOS(.v7), .tvOS(.v13)
 
     ],
     products: [
