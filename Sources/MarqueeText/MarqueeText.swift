@@ -12,7 +12,7 @@ public struct MarqueeText: View {
     var isCompact = false
     
     public var body: some View {
-        let stringWidth = text.widthOfString(usingFont: font)
+        let stringWidth  = text.widthOfString(usingFont: font)
         let stringHeight = text.heightOfString(usingFont: font)
         
         // Create our animations
@@ -37,20 +37,23 @@ public struct MarqueeText: View {
                         animation: animation,
                         nullAnimation: nullAnimation
                     )
+                    // force left alignment when scrolling
                     .frame(
                         minWidth: 0,
-                        maxWidth: geo.size.width, // Constrain to available width
+                        maxWidth: .infinity,
                         minHeight: 0,
                         maxHeight: .infinity,
                         alignment: .topLeading
                     )
-                    .clipped() // Prevent content from spilling out
+                    .offset(x: leftFade)
                     .mask(
                         fadeMask(
                             leftFade: leftFade,
                             rightFade: rightFade
                         )
                     )
+                    .frame(width: geo.size.width + leftFade)
+                    .offset(x: -leftFade)
                 } else {
                     // MARK: - Non-scrolling version
                     Text(text)
@@ -60,10 +63,10 @@ public struct MarqueeText: View {
                         }
                         .frame(
                             minWidth: 0,
-                            maxWidth: geo.size.width, // Constrain to available width
+                            maxWidth: .infinity,
                             minHeight: 0,
                             maxHeight: .infinity,
-                            alignment: alignment
+                            alignment: alignment // use alignment only if not scrolling
                         )
                 }
             }
@@ -87,8 +90,7 @@ public struct MarqueeText: View {
             }
         }
         .frame(height: stringHeight)
-        .frame(maxWidth: isCompact ? min(stringWidth, .infinity) : .infinity) // Respect parent bounds
-        .clipped() // Ensure the entire view is clipped to its frame
+        .frame(maxWidth: isCompact ? stringWidth : nil)
         .onDisappear {
             self.animate = false
         }
@@ -108,14 +110,14 @@ public struct MarqueeText: View {
             Text(text)
                 .lineLimit(1)
                 .font(.init(font))
-                .offset(x: animate ? -stringWidth - stringHeight : 0) // Adjusted offset
+                .offset(x: animate ? -stringWidth - stringHeight * 2 : 0)
                 .animation(animate ? animation : nullAnimation, value: animate)
                 .fixedSize(horizontal: true, vertical: false)
             
             Text(text)
                 .lineLimit(1)
                 .font(.init(font))
-                .offset(x: animate ? 0 : stringWidth + stringHeight) // Adjusted offset
+                .offset(x: animate ? 0 : stringWidth + stringHeight * 2)
                 .animation(animate ? animation : nullAnimation, value: animate)
                 .fixedSize(horizontal: true, vertical: false)
         }
@@ -125,6 +127,8 @@ public struct MarqueeText: View {
     @ViewBuilder
     private func fadeMask(leftFade: CGFloat, rightFade: CGFloat) -> some View {
         HStack(spacing: 0) {
+            Rectangle().frame(width: 2).opacity(0)
+            
             LinearGradient(
                 gradient: Gradient(colors: [Color.black.opacity(0), Color.black]),
                 startPoint: .leading,
@@ -132,8 +136,11 @@ public struct MarqueeText: View {
             )
             .frame(width: leftFade)
             
-            Rectangle()
-                .fill(Color.black)
+            LinearGradient(
+                gradient: Gradient(colors: [Color.black, Color.black]),
+                startPoint: .leading,
+                endPoint: .trailing
+            )
             
             LinearGradient(
                 gradient: Gradient(colors: [Color.black, Color.black.opacity(0)]),
@@ -141,6 +148,8 @@ public struct MarqueeText: View {
                 endPoint: .trailing
             )
             .frame(width: rightFade)
+            
+            Rectangle().frame(width: 2).opacity(0)
         }
     }
     
@@ -153,9 +162,9 @@ public struct MarqueeText: View {
         startDelay: Double,
         alignment: Alignment? = nil
     ) {
-        self.text = text
-        self.font = font
-        self.leftFade = leftFade
+        self.text      = text
+        self.font      = font
+        self.leftFade  = leftFade
         self.rightFade = rightFade
         self.startDelay = startDelay
         self.alignment = alignment ?? .topLeading
